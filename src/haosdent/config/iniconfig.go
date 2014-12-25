@@ -1,5 +1,9 @@
 package config
 
+import (
+	"fmt"
+)
+
 type INIConfig struct {
 	path  string
 	props map[string]string
@@ -7,7 +11,6 @@ type INIConfig struct {
 
 func NewINIConfig(path string) *INIConfig {
 	var props = make(map[string]string, 100)
-	props["props.first"] = "true"
 	return &INIConfig{
 		path,
 		props,
@@ -15,10 +18,15 @@ func NewINIConfig(path string) *INIConfig {
 }
 
 func (self *INIConfig) Get(k string) (val string, err error) {
-	val = self.props[k]
-	err = nil
+	var ok bool
+	if val, ok = self.props[k]; ok {
+		err = nil
+	} else {
+		err = fmt.Errorf("Don't contains key: \"%s\".", k)
+	}
 	return val, err
 }
 
 func (self *INIConfig) AddProp(k string, v interface{}) {
+	self.props[k] = v.(string)
 }
