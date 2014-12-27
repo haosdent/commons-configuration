@@ -27,7 +27,10 @@ func NewINIConfig(path string) *INIConfig {
 		path,
 		make(map[string]string, 100),
 	}
-	instance.load()
+	var err = instance.load()
+	if err != nil {
+		panic(err)
+	}
 	return instance
 }
 
@@ -126,8 +129,11 @@ func (self *INIConfig) parseVal(val string) string {
 	return val
 }
 
-func (self *INIConfig) load() {
-	var file, _ = os.Open(self.path)
+func (self *INIConfig) load() error {
+	var file, err = os.Open(self.path)
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
 	var scanner = bufio.NewScanner(file)
@@ -159,4 +165,47 @@ func (self *INIConfig) load() {
 			//fmt.Println(key, val)
 		}
 	}
+
+	return nil
+}
+
+func (self *INIConfig) Save() error {
+	var tmpProps = make(map[string]map[string]string, 20)
+	var globalProps = make(map[string]string, 50)
+
+	for k, v := range self.props {
+		var index = strings.Index(k, ".")
+
+		if index < 0 {
+			globalProps[k] = v
+			continue
+		}
+
+		var section = k[:index]
+		k = k[index+1:]
+		tmpProps[section] = make(map[string]string, 50)
+		tmpProps[section][k] = v
+	}
+
+	var out, err = os.Create(self.path)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	for k, v := range globalProps {
+		fmt.Fprintf(out, "%s = %s\n", k, v)
+	}
+	if len(globalProps) > 0 {
+		fmt.Fprintf(out, "\n")
+	}
+
+	for s, p := range tmpProps {
+		fmt.Fprintf(out, "[%s]\n", s)
+		for k, v := range p {
+			fmt.Fprintf(out, "%s = %s\n", k, v)
+		}
+		fmt.Fprintf(out, "\n")
+	}
+	return nil
 }

@@ -19,4 +19,5 @@ type Configer interface {
 	// ClearProp(k string)
 	// Clear()
 	// SetProp(k string, v interface{})
+	Save() error
 }

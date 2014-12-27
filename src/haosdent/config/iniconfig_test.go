@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
 )
 
 func SetUpConfigFile(path string) {
 	var data = []byte(`
+    global = a
     [props]
     exist = true
     `)
@@ -59,7 +61,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestAddProp(t *testing.T) {
-	var path = "/tmp/config.ini"
+	var path = "config.ini"
 	SetUpConfigFile(path)
 	defer TearDownConfigFile(path)
 
@@ -83,5 +85,19 @@ func TestAddProp(t *testing.T) {
 	}
 	if val != except {
 		t.Errorf("[after]Value \"%s\" is not equal to except \"%s\"", val, except)
+	}
+}
+
+func TestSave(t *testing.T) {
+	var path = "config.ini"
+	SetUpConfigFile(path)
+	defer TearDownConfigFile(path)
+
+	var c Configer = NewINIConfig(path)
+	c.Save()
+
+	var newC Configer = NewINIConfig(path)
+	if !reflect.DeepEqual(c, newC) {
+		t.Errorf("[after]Old struct and new struct is not equal.")
 	}
 }
