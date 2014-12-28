@@ -29,9 +29,11 @@ func NewINIConfig(path string) *INIConfig {
 	}
 	var err = instance.load()
 	if err != nil {
-		panic(err)
+		//panic(err)
+		return nil
+	} else {
+		return instance
 	}
-	return instance
 }
 
 func (self *INIConfig) Get(k string) (val string, err error) {
