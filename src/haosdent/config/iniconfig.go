@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type INIConfig struct {
+type IniConfig struct {
 	path  string
 	props map[string]string
 }
@@ -22,8 +22,8 @@ const (
 	STOP
 )
 
-func NewINIConfig(path string) *INIConfig {
-	var instance = &INIConfig{
+func NewIniConfig(path string) *IniConfig {
+	var instance = &IniConfig{
 		path,
 		make(map[string]string, 100),
 	}
@@ -36,7 +36,7 @@ func NewINIConfig(path string) *INIConfig {
 	}
 }
 
-func (self *INIConfig) Get(k string) (val string, err error) {
+func (self *IniConfig) Get(k string) (val string, err error) {
 	var ok bool
 	if val, ok = self.props[k]; ok {
 		err = nil
@@ -46,11 +46,11 @@ func (self *INIConfig) Get(k string) (val string, err error) {
 	return val, err
 }
 
-func (self *INIConfig) AddProp(k string, v interface{}) {
+func (self *IniConfig) AddProp(k string, v interface{}) {
 	self.props[k] = v.(string)
 }
 
-func (self *INIConfig) isCommentLine(line string) bool {
+func (self *IniConfig) isCommentLine(line string) bool {
 	if line == "" {
 		return false
 	}
@@ -58,7 +58,7 @@ func (self *INIConfig) isCommentLine(line string) bool {
 	return line[0] == '#' || line[0] == ';'
 }
 
-func (self *INIConfig) isSectionLine(line string) bool {
+func (self *IniConfig) isSectionLine(line string) bool {
 	if line == "" {
 		return false
 	}
@@ -66,7 +66,7 @@ func (self *INIConfig) isSectionLine(line string) bool {
 	return line[0] == '[' && line[len(line)-1] == ']'
 }
 
-func (self *INIConfig) isSpace(c rune) bool {
+func (self *IniConfig) isSpace(c rune) bool {
 	if c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r' {
 		return true
 	} else {
@@ -74,7 +74,7 @@ func (self *INIConfig) isSpace(c rune) bool {
 	}
 }
 
-func (self *INIConfig) parseVal(val string) string {
+func (self *IniConfig) parseVal(val string) string {
 	if len(val) == 0 {
 		return val
 	}
@@ -131,7 +131,7 @@ func (self *INIConfig) parseVal(val string) string {
 	return val
 }
 
-func (self *INIConfig) load() error {
+func (self *IniConfig) load() error {
 	var file, err = os.Open(self.path)
 	if err != nil {
 		return err
@@ -171,7 +171,7 @@ func (self *INIConfig) load() error {
 	return nil
 }
 
-func (self *INIConfig) Save() error {
+func (self *IniConfig) Save() error {
 	var tmpProps = make(map[string]map[string]string, 20)
 	var globalProps = make(map[string]string, 50)
 

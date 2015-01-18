@@ -32,7 +32,7 @@ func TestGet(t *testing.T) {
 	SetUpConfigFile(path)
 	defer TearDownConfigFile(path)
 
-	var c Configer = NewINIConfig(path)
+	var c Configer = NewIniConfig(path)
 	var key = "props.exist"
 
 	var except = "true"
@@ -65,7 +65,7 @@ func TestAddProp(t *testing.T) {
 	SetUpConfigFile(path)
 	defer TearDownConfigFile(path)
 
-	var c Configer = NewINIConfig(path)
+	var c Configer = NewIniConfig(path)
 	var key = "props.noexist"
 
 	var val, err = c.Get(key)
@@ -93,10 +93,10 @@ func TestSave(t *testing.T) {
 	SetUpConfigFile(path)
 	defer TearDownConfigFile(path)
 
-	var c Configer = NewINIConfig(path)
+	var c Configer = NewIniConfig(path)
 	c.Save()
 
-	var newC Configer = NewINIConfig(path)
+	var newC Configer = NewIniConfig(path)
 	if !reflect.DeepEqual(c, newC) {
 		t.Errorf("[after]Old struct and new struct is not equal.")
 	}
