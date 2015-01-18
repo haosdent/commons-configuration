@@ -110,15 +110,15 @@ func (self *IniConfig) parseVal(val string) string {
 			} else if c == quote {
 				state = STOP
 			} else {
-				bs[bl] += c
+				bs[bl] = c
 				bl++
 			}
 		case ESCAPE:
 			if c != quote {
-				bs[bl] += '\\'
+				bs[bl] = '\\'
 				bl++
 			}
-			bs[bl] += c
+			bs[bl] = c
 			bl++
 			state = QUOTED
 		case STOP:
