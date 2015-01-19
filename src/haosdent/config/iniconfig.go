@@ -12,10 +12,10 @@ type IniConfig struct {
 	props map[string]string
 }
 
-type ParseState int
+type IniParseState int
 
 const (
-	START ParseState = iota
+	START IniParseState = iota
 	NORMAL
 	QUOTED
 	ESCAPE

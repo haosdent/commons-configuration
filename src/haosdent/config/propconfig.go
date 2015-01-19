@@ -10,13 +10,13 @@ import (
 
 type PropConfig struct {
     path string
-    props map[string][list]
+    props map[string]*list.List
 }
 
-type ParseState int
+type PropParseState int
 
 const (
-    KEY_START ParseState = iota
+    KEY_START PropParseState = iota
     KEY_ESCAPE
     KEY_COMMET
     KEY_PREVAR
@@ -34,7 +34,7 @@ const (
 func NewPropConfig(path string) *PropConfig {
     var instance = &PropConfig{
         path,
-        make(map[string]list, 100),
+        make(map[string]*list.List, 100),
     }
     var err = instance.load()
     if err != nil {
@@ -47,7 +47,7 @@ func NewPropConfig(path string) *PropConfig {
 
 func (self *PropConfig) Get(k string) (val string, err error) {
     var ok bool
-    var l list
+    var l *list.List
     if l, ok = self.props[k]; ok {
         err = nil
     } else {
@@ -59,8 +59,8 @@ func (self *PropConfig) Get(k string) (val string, err error) {
 
 func (self *PropConfig) AddProp(k string, v interface{}) {
     var ok bool
-    var l list
-    if l, ok = self.props[k]: !ok {
+    var l *list.List
+    if l, ok = self.props[k]; !ok {
         l = list.New()
     }
     l.PushBack(v.(string))
@@ -104,14 +104,14 @@ func (self *PropConfig) load() error {
             } else {
                 // append to curKey
                 curKey[curKeyLen] = c
-                ++curKeyLen
+                curKeyLen++
             }
         case KEY_ESCAPE:
             if c == '\n' {
             } else {
                 // append to curKey
                 curKey[curKeyLen] = c
-                ++curKeyLen
+                curKeyLen++
                 state = KEY_START
             }
         case KEY_COMMET:
@@ -125,7 +125,7 @@ func (self *PropConfig) load() error {
             } else {
                 // append '$' to curKey
                 curKey[curKeyLen] = '$'
-                ++curKeyLen
+                curKeyLen++
                 state = KEY_START
             }
         case KEY_VAR:
@@ -134,7 +134,7 @@ func (self *PropConfig) load() error {
                 var tmpVal = Get(curVar)
                 for _, ch := range tmpVal {
                     curKey[curKeyLen] = ch
-                    ++curKeyLen
+                    curKeyLen++
                 }
                 // clear curVar
                 curVarLen = 0
@@ -142,12 +142,12 @@ func (self *PropConfig) load() error {
             } else if c == '\n' {
                 // append to curKey, contains ${
                 curKey[curKeyLen] = '$'
-                ++curKeyLen
+                curKeyLen++
                 curKey[curKeyLen] = '{'
-                ++curKeyLen
+                curKeyLen++
                 for i := range curVarLen {
                     curKey[curKeyLen] = curVar[i]
-                    ++curKeyLen
+                    curKeyLen++
                 }
                 // clear curVar
                 curVarLen = 0
@@ -155,7 +155,7 @@ func (self *PropConfig) load() error {
             } else {
                 // append to curVar
                 curVar[curVarLen] = c
-                ++curVarLen
+                curVarLen++
             }
         case VAL_START:
             if c == '#' {
@@ -181,7 +181,7 @@ func (self *PropConfig) load() error {
             } else {
                 // append to curVal
                 curVal[curValLen] = c
-                ++curValLen
+                curValLen++
             }
         case VAL_ESCAPE:
             if c == '\n' {
@@ -189,7 +189,7 @@ func (self *PropConfig) load() error {
             } else {
                 // append to curVal
                 curVal[curValLen] = c
-                ++curValLen
+                curValLen++
                 state = VAL_START
             }
         case VAL_COMMENT:
@@ -209,7 +209,7 @@ func (self *PropConfig) load() error {
             } else {
                 // append '$' to curVal
                 curVal[curValLen] = '$'
-                ++curValLen
+                curValLen++
                 state = VAL_START
             }
         case VAL_VAR:
@@ -218,7 +218,7 @@ func (self *PropConfig) load() error {
                 var tmpVal = Get(curVar)
                 for _, ch := range tmpVal {
                     curVal[curValLen] = ch
-                    ++curValLen
+                    curValLen++
                 }
                 // clear curVar
                 curVarLen = 0
@@ -226,12 +226,12 @@ func (self *PropConfig) load() error {
             } else if c == '\n' {
                 // append to curVal, contains ${
                 curVal[curValLen] = '$'
-                ++curValLen
+                curValLen++
                 curVal[curValLen] = '{'
-                ++curValLen
+                curValLen++
                 for i := range curVarLen {
                     curVal[curValLen] = curVar[i]
-                    ++curValLen
+                    curValLen++
                 }
                 // clear curVar
                 curVarLen = 0
@@ -239,7 +239,7 @@ func (self *PropConfig) load() error {
             } else {
                 // append to curVal
                 curVal[curValLen] = c
-                ++curValLen
+                curValLen++
             }
         case EOF:
             break
@@ -258,7 +258,7 @@ func (self *PropConfig) Save() error {
 
     for k, l := range self.props {
         for i, e := range l {
-            l[i] = strings.Replace(e, ",", "\,", -1)
+            l[i] = strings.Replace(e, ",", "\\,", -1)
         }
         var v = strings.Join(l, ", ")
         fmt.Fprintf(out, "%s = %s\n", k, v)

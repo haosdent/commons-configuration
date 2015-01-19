@@ -11,7 +11,7 @@ import (
 func SetUpConfigFile(path string) {
     var data = []byte(`
     global = a
-    exist = true
+    props.exist = true
     `)
     var err = ioutil.WriteFile(path, data, 0644)
     if err != nil {
@@ -27,7 +27,7 @@ func TearDownConfigFile(path string) {
 }
 
 func TestGet(t *testing.T) {
-    var path = "config.ini"
+    var path = "config.prop"
     SetUpConfigFile(path)
     defer TearDownConfigFile(path)
 
