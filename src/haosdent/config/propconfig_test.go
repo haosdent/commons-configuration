@@ -8,7 +8,7 @@ import (
     "testing"
 )
 
-func SetUpConfigFile(path string) {
+func SetUpPropConfigFile(path string) {
     var data = []byte(`
     global = a
     props.exist = true
@@ -19,17 +19,17 @@ func SetUpConfigFile(path string) {
     }
 }
 
-func TearDownConfigFile(path string) {
+func TearDownPropConfigFile(path string) {
     var err = os.Remove(path)
     if err != nil {
         panic(err)
     }
 }
 
-func TestGet(t *testing.T) {
+func TestPropGet(t *testing.T) {
     var path = "config.prop"
-    SetUpConfigFile(path)
-    defer TearDownConfigFile(path)
+    SetUpPropConfigFile(path)
+    defer TearDownPropConfigFile(path)
 
     var c Configer = NewPropConfig(path)
     var key = "props.exist"
@@ -41,7 +41,7 @@ func TestGet(t *testing.T) {
         t.Errorf("[after]Error is not empty: %s.", err)
     }
     if val != except {
-        fmt.Println(len(val), len(except))
+        //fmt.Println(len(val), len(except))
         for _, c := range val {
             fmt.Println(c)
         }
@@ -59,10 +59,10 @@ func TestGet(t *testing.T) {
     }
 }
 
-func TestAddProp(t *testing.T) {
-    var path = "config.ini"
-    SetUpConfigFile(path)
-    defer TearDownConfigFile(path)
+func TestPropAddProp(t *testing.T) {
+    var path = "config.prop"
+    SetUpPropConfigFile(path)
+    defer TearDownPropConfigFile(path)
 
     var c Configer = NewPropConfig(path)
     var key = "props.noexist"
@@ -88,9 +88,9 @@ func TestAddProp(t *testing.T) {
 }
 
 func TestSave(t *testing.T) {
-    var path = "config.ini"
-    SetUpConfigFile(path)
-    defer TearDownConfigFile(path)
+    var path = "config.prop"
+    SetUpPropConfigFile(path)
+    defer TearDownPropConfigFile(path)
 
     var c Configer = NewPropConfig(path)
     c.Save()

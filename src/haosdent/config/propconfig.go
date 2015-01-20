@@ -4,13 +4,13 @@ import (
     "bufio"
     "fmt"
     "os"
+    "io"
     "strings"
-    "container/list"
 )
 
 type PropConfig struct {
     path string
-    props map[string]*list.List
+    props map[string][]string
 }
 
 type PropParseState int
@@ -18,7 +18,7 @@ type PropParseState int
 const (
     KEY_START PropParseState = iota
     KEY_ESCAPE
-    KEY_COMMET
+    KEY_COMMENT
     KEY_PREVAR
     KEY_VAR
 
@@ -34,7 +34,7 @@ const (
 func NewPropConfig(path string) *PropConfig {
     var instance = &PropConfig{
         path,
-        make(map[string]*list.List, 100),
+        make(map[string][]string, 100),
     }
     var err = instance.load()
     if err != nil {
@@ -47,23 +47,29 @@ func NewPropConfig(path string) *PropConfig {
 
 func (self *PropConfig) Get(k string) (val string, err error) {
     var ok bool
-    var l *list.List
+    var l []string
     if l, ok = self.props[k]; ok {
         err = nil
+        val = strings.Join(l, ",")
     } else {
         err = fmt.Errorf("Don't contains key: \"%s\".", k)
     }
-    val = strings.Join(l, ',')
     return val, err
 }
 
 func (self *PropConfig) AddProp(k string, v interface{}) {
     var ok bool
-    var l *list.List
+    var l []string
     if l, ok = self.props[k]; !ok {
-        l = list.New()
+        l = make([]string, 0, 3)
     }
-    l.PushBack(v.(string))
+    k = strings.TrimSpace(k)
+    if (len(k)) == 0 {
+        return
+    }
+
+    var vStr = strings.TrimSpace(v.(string))
+    l = append(l, vStr);
     self.props[k] = l;
 }
 
@@ -83,24 +89,33 @@ func (self *PropConfig) load() error {
     var curVar = make([]rune, 1024)
     var curVarLen = 0
 
-    // TODO: when to switch state to EOF
-    for state = EOF {
-        var c = reader.ReadRune()
+    for state != EOF {
+        c, _, err := reader.ReadRune()
         switch state {
         case KEY_START:
             if c == '#' {
-                state = KEY_COMMET
+                state = KEY_COMMENT
             } else if c == '\\' {
                 state = KEY_ESCAPE
             } else if c == '$' {
                 state = KEY_PREVAR
+            } else if c == '=' || c == ':' {
+                state = VAL_START
             } else if c == '\n' {
                 // AddProp
-                AddProp(string(curKey[:curKeyLen]), string(curVal[:curValLen]))
+                self.AddProp(string(curKey[:curKeyLen]), string(curVal[:curValLen]))
                 // clear all
                 curKeyLen = 0
                 curValLen = 0
                 curVarLen = 0
+            } else if err == io.EOF {
+                // AddProp
+                self.AddProp(string(curKey[:curKeyLen]), string(curVal[:curValLen]))
+                // clear all
+                curKeyLen = 0
+                curValLen = 0
+                curVarLen = 0
+                state = EOF
             } else {
                 // append to curKey
                 curKey[curKeyLen] = c
@@ -114,7 +129,7 @@ func (self *PropConfig) load() error {
                 curKeyLen++
                 state = KEY_START
             }
-        case KEY_COMMET:
+        case KEY_COMMENT:
             if c == '\n' {
                 state = KEY_START
             } else {
@@ -131,7 +146,7 @@ func (self *PropConfig) load() error {
         case KEY_VAR:
             if c == '}' {
                 // append to curKey with Get()
-                var tmpVal = Get(curVar)
+                tmpVal, _ := self.Get(string(curVar[:curVarLen]))
                 for _, ch := range tmpVal {
                     curKey[curKeyLen] = ch
                     curKeyLen++
@@ -145,7 +160,7 @@ func (self *PropConfig) load() error {
                 curKeyLen++
                 curKey[curKeyLen] = '{'
                 curKeyLen++
-                for i := range curVarLen {
+                for i := 0; i < curVarLen; i++ {
                     curKey[curKeyLen] = curVar[i]
                     curKeyLen++
                 }
@@ -159,25 +174,33 @@ func (self *PropConfig) load() error {
             }
         case VAL_START:
             if c == '#' {
-                state = VAL_COMMET
+                state = VAL_COMMENT
             } else if c == '\\' {
                 state = VAL_ESCAPE
             } else if c == '$' {
                 state = VAL_PREVAR
             } else if c == ',' {
                 // AddProp
-                AddProp(string(curKey[:curKeyLen]), string(curVal[:curValLen]))
+                self.AddProp(string(curKey[:curKeyLen]), string(curVal[:curValLen]))
                 // clear curVar and curVal
                 curValLen = 0
                 curVarLen = 0
             } else if c == '\n' {
                 // AddProp
-                AddProp(string(curKey[:curKeyLen]), string(curVal[:curValLen]))
+                self.AddProp(string(curKey[:curKeyLen]), string(curVal[:curValLen]))
                 // clear all
                 curKeyLen = 0
                 curValLen = 0
                 curVarLen = 0
                 state = KEY_START
+            } else if err == io.EOF {
+                // AddProp
+                self.AddProp(string(curKey[:curKeyLen]), string(curVal[:curValLen]))
+                // clear all
+                curKeyLen = 0
+                curValLen = 0
+                curVarLen = 0
+                state = EOF
             } else {
                 // append to curVal
                 curVal[curValLen] = c
@@ -195,7 +218,7 @@ func (self *PropConfig) load() error {
         case VAL_COMMENT:
             if c == '\n' {
                 // AddProp
-                AddProp(string(curKey[:curKeyLen]), string(curVal[:curValLen]))
+                self.AddProp(string(curKey[:curKeyLen]), string(curVal[:curValLen]))
                 // clear all
                 curKeyLen = 0
                 curValLen = 0
@@ -215,7 +238,7 @@ func (self *PropConfig) load() error {
         case VAL_VAR:
             if c == '}' {
                 // append to curVal with Get()
-                var tmpVal = Get(curVar)
+                tmpVal, _ := self.Get(string(curVar[:curVarLen]))
                 for _, ch := range tmpVal {
                     curVal[curValLen] = ch
                     curValLen++
@@ -229,7 +252,7 @@ func (self *PropConfig) load() error {
                 curValLen++
                 curVal[curValLen] = '{'
                 curValLen++
-                for i := range curVarLen {
+                for i := 0; i < curVarLen; i++ {
                     curVal[curValLen] = curVar[i]
                     curValLen++
                 }

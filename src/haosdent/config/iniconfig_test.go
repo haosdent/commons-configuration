@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func SetUpConfigFile(path string) {
+func SetUpIniConfigFile(path string) {
 	var data = []byte(`
     global = a
     [props]
@@ -20,17 +20,17 @@ func SetUpConfigFile(path string) {
 	}
 }
 
-func TearDownConfigFile(path string) {
+func TearDownIniConfigFile(path string) {
 	var err = os.Remove(path)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func TestGet(t *testing.T) {
+func TestIniGet(t *testing.T) {
 	var path = "config.ini"
-	SetUpConfigFile(path)
-	defer TearDownConfigFile(path)
+	SetUpIniConfigFile(path)
+	defer TearDownIniConfigFile(path)
 
 	var c Configer = NewIniConfig(path)
 	var key = "props.exist"
@@ -60,10 +60,10 @@ func TestGet(t *testing.T) {
 	}
 }
 
-func TestAddProp(t *testing.T) {
+func TestIniAddProp(t *testing.T) {
 	var path = "config.ini"
-	SetUpConfigFile(path)
-	defer TearDownConfigFile(path)
+	SetUpIniConfigFile(path)
+	defer TearDownIniConfigFile(path)
 
 	var c Configer = NewIniConfig(path)
 	var key = "props.noexist"
@@ -88,10 +88,10 @@ func TestAddProp(t *testing.T) {
 	}
 }
 
-func TestSave(t *testing.T) {
+func TestIniSave(t *testing.T) {
 	var path = "config.ini"
-	SetUpConfigFile(path)
-	defer TearDownConfigFile(path)
+	SetUpIniConfigFile(path)
+	defer TearDownIniConfigFile(path)
 
 	var c Configer = NewIniConfig(path)
 	c.Save()
