@@ -53,3 +53,7 @@ func (self *XmlConfig) AddProp(k string, v interface{}) {
     l = append(l, vStr);
     self.props[k] = l;
 }
+
+func (self *XmlConfig) load() error {
+
+}
