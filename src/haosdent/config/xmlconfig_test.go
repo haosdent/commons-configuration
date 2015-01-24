@@ -63,7 +63,7 @@ func TestXmlGet(t *testing.T) {
     }
 }
 
-func TestXmlAddXml(t *testing.T) {
+func TestXmlAddProp(t *testing.T) {
     var path = "config.xml"
     SetUpXmlConfigFile(path)
     defer TearDownXmlConfigFile(path)
@@ -81,7 +81,7 @@ func TestXmlAddXml(t *testing.T) {
 
     var except = "true"
     val = except
-    c.AddXml(key, val)
+    c.AddProp(key, val)
     val, err = c.Get(key)
     if err != nil {
         t.Errorf("[after]Error is not empty: %s.", err)
@@ -91,7 +91,7 @@ func TestXmlAddXml(t *testing.T) {
     }
 }
 
-func TestSave(t *testing.T) {
+func TestXmlSave(t *testing.T) {
     var path = "config.xml"
     SetUpXmlConfigFile(path)
     defer TearDownXmlConfigFile(path)

@@ -1,7 +1,7 @@
 package config
 
 import (
-    "bufio"
+    "encoding/xml"
     "fmt"
     "os"
     "strings"
@@ -55,5 +55,34 @@ func (self *XmlConfig) AddProp(k string, v interface{}) {
 }
 
 func (self *XmlConfig) load() error {
+    var file, err = os.Open(self.path)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
 
+    decoder := xml.NewDecoder(file)
+
+    var elems []string
+    for {
+        token, _ := decoder.Token()
+        if token == nil {
+            break
+        }
+        switch elem := token.(type) {
+        case xml.StartElement:
+            elems = append(elems, elem.Name.Local)
+        case xml.EndElement:
+            elems = elems[:len(elems) - 1]
+        case xml.CharData:
+            content := string([]byte(elem))
+            self.AddProp(strings.Join(elems, "."), content)
+        }
+    }
+
+    return nil
+}
+
+func (self *XmlConfig) Save() error {
+    return nil
 }
