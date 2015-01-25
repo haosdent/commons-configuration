@@ -76,7 +76,10 @@ func (self *XmlConfig) load() error {
             elems = elems[:len(elems) - 1]
         case xml.CharData:
             content := string([]byte(elem))
-            self.AddProp(strings.Join(elems, "."), content)
+            content = strings.TrimSpace(content)
+            if len(content) > 0 {
+                self.AddProp(strings.Join(elems, "."), content)
+            }
         }
     }
 

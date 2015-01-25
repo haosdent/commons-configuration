@@ -35,7 +35,7 @@ func TestXmlGet(t *testing.T) {
     SetUpXmlConfigFile(path)
     defer TearDownXmlConfigFile(path)
 
-    var c Configer = NewPropConfig(path)
+    var c Configer = NewXmlConfig(path)
     var key = "props.exist"
 
     var except = "true"
